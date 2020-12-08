@@ -35,8 +35,5 @@ class Event:
         return round(profit, 2)
 
 
-event = Event('Lodz1', 10, 2)
-print(event.calculate_cost())
-print(event.calculate_profit())
 
 
