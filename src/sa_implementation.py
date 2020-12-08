@@ -119,7 +119,7 @@ class Solution:
                         # Do not accept the solution
                         sol_0 = depo
 
-            self.acc_list.append(acc)
+            self.acc_list.append(np.exp(-(profit0 - profit1) / T))
             self.profit_list.append(profit0)
 
             # Plot the result
@@ -152,7 +152,7 @@ class Solution:
 if __name__ == '__main__':
     # tests
     init_route = [Event("Krakow1", 1, 1), Event("Poznan1", 3, 4), Event("Szczecin1", 8, 2), Event("Wroclaw1", 11, 4), Event("Lodz2", 16, 5), Event("Wroclaw2", 21, 5), Event("Katowice2", 27, 4)]
-    init_solution = Solution(init_route, 30, SolMethod.GEO, EVENTSt)
+    init_solution = Solution(init_route, 50, SolMethod.GEO, EVENTSt)
     init_solution.sym_ann_algorithm()
     print(init_solution)
 
