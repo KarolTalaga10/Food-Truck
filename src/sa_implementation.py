@@ -135,8 +135,8 @@ class Solution:
 
         # Profit plot
         ax2.axis([0, len(self.T_list), 0, 15000])
-        #ax2.scatter(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, s=1.0, color='darkgreen')
-        ax2.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, linewidth=1.0,
+        ax2.scatter(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, s=1.0, color='darkgreen')
+        #ax2.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, linewidth=1.0,
                     color='darkgreen')
         # Acceptance plot
         ax3.axis([0, len(self.T_list), 0, 1])
