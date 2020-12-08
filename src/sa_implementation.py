@@ -78,14 +78,18 @@ class Solution:
         return max_profit
 
     def sym_ann_algorithm(self):
+        T = self.T_init
         profit0 = Solution.calculate_max_profit(self.sol_init)
         sol_0 = self.sol_init
-        Temp_iter = 1000  # Set number of temperature iterations
-        for i in range(Temp_iter):
+        #Temp_iter = 1000  # Set number of temperature iterations
+        #for i in range(Temp_iter):
+        i = 0
+        while T > 0.001:
             print(i, 'profit = ', profit0)
 
             T = self.get_temp(i)
             self.T_list.append(T)
+            i += 1
             for j in range(100):  # Set
 
                 # Delete one event
@@ -123,20 +127,25 @@ class Solution:
             self.profit_list.append(profit0)
 
             # Plot the result
-        fig = plt.figure(figsize=(10, 10))
-        ax1 = fig.add_subplot(221)
-        ax2 = fig.add_subplot(222)
-        ax3 = fig.add_subplot(223)
-        ax4 = fig.add_subplot(224)
+        fig = plt.figure(figsize=(15, 5))
+        #ax1 = fig.add_subplot(221)
+        ax2 = fig.add_subplot(131)
+        ax3 = fig.add_subplot(132)
+        ax4 = fig.add_subplot(133)
+
         # Profit plot
-        ax2.axis([0, Temp_iter, 0, 20000])
-        ax2.scatter(np.linspace(0, Temp_iter, num=Temp_iter, endpoint=False), self.profit_list, s=1.0, color='darkgreen')
+        ax2.axis([0, len(self.T_list), 0, 15000])
+        #ax2.scatter(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, s=1.0, color='darkgreen')
+        ax2.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, linewidth=1.0,
+                    color='darkgreen')
         # Acceptance plot
-        ax3.axis([0, Temp_iter, 0, 1])
-        ax3.scatter(np.linspace(0, Temp_iter, num=Temp_iter, endpoint=False), self.acc_list, s=1.0, color='darkgreen')
+        ax3.axis([0, len(self.T_list), 0, 1])
+        ax3.scatter(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.acc_list, s=1.0, color='darkgreen')
+        #ax3.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.acc_list, linewidth=1.0, color='darkgreen')
+
         # Temperature plot
-        ax4.axis([0, Temp_iter, 0, self.T_init])
-        ax4.scatter(np.linspace(0, Temp_iter, num=Temp_iter, endpoint=False), self.T_list, s=1.0, color='darkgreen')
+        ax4.axis([0, len(self.T_list), 0, self.T_init])
+        ax4.scatter(np.linspace(0, len(self.T_list), len(self.T_list), endpoint=False), self.T_list, s=1.0, color='darkgreen')
         '''
         ax1.clear()
         for first, second in zip(coords[:-1], coords[1:]):
@@ -152,7 +161,7 @@ class Solution:
 if __name__ == '__main__':
     # tests
     init_route = [Event("Krakow1", 1, 1), Event("Poznan1", 3, 4), Event("Szczecin1", 8, 2), Event("Wroclaw1", 11, 4), Event("Lodz2", 16, 5), Event("Wroclaw2", 21, 5), Event("Katowice2", 27, 4)]
-    init_solution = Solution(init_route, 50, SolMethod.GEO, EVENTSt)
+    init_solution = Solution(init_route, 5000, SolMethod.GEO, EVENTSt)
     init_solution.sym_ann_algorithm()
     print(init_solution)
 
