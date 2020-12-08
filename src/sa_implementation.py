@@ -1,5 +1,5 @@
 import numpy as np
-from src.data_prep import EVENTS
+from src.data_prep import EVENTS, EVENTSt
 from enum import Enum
 import matplotlib.pyplot as plt
 
@@ -36,17 +36,17 @@ class Event:
         return round(profit, 2)
 
 
-class SollMethod(Enum):
+class SolMethod(Enum):
     GEO = 1
     BOLZ = 2
     CAUCHY = 3
 
 
-class Sollution:
-    def __init__(self, soll_init, T_init, soll_method, event_depo):
-        self.soll_init = soll_init
+class Solution:
+    def __init__(self, sol_init, T_init, sol_method, event_depo):
+        self.sol_init = sol_init
         self.T_init = T_init
-        self.soll_method = soll_method
+        self.sol_method = sol_method
         self.event_depo = event_depo
         self.T_list = []
         self.acc_list = []
@@ -55,71 +55,69 @@ class Sollution:
     def get_temp(self, k):
         T = 0
         alpha = 0.999
-        if self.soll_method is SollMethod.GEO:
+        if self.sol_method is SolMethod.GEO:
             T = self.T_init * (alpha**k)
-        if self.soll_method is SollMethod.BOLZ:
+        if self.sol_method is SolMethod.BOLZ:
             T = self.T_init * (1/(1+np.log10(k)))
-        if self.soll_method is SollMethod.CAUCHY:
+        if self.sol_method is SolMethod.CAUCHY:
             T = self.T_init * (1/(1+k))
         return T
 
-    def check_accessibility(self, time):  # works on tuples only
+    def check_accessibility(self, time, del_event):  # works on tuples only
         poss_events = []
-        for tuple in self.event_storage:
-            if time <= tuple[1] + 1 and time >= tuple[2] + 1:
-                poss_events.append(tuple)
-        while poss_events == []:
-            poss_events = self.check_accessibility(time+1)
+        for tup in self.event_depo:
+            if time + 1 >= tup[1] and time + 1 <= tup[2] and tup[0] is not del_event.name:
+                poss_events.append(tup)
         return poss_events
 
     @staticmethod
-    def calculate_max_profit(sollution):
+    def calculate_max_profit(solution):
         max_profit = 0
-        for event in sollution:
+        for event in solution:
             max_profit += event.calculate_profit() - event.calculate_cost()  # - fuel cost
         return max_profit
 
-    def sym_ann_algotirhm(self):
-        profit0 = Sollution.calculate_max_profit(self.soll_init)
-        soll0 = self.soll_init
-        Temp_iter = 1000
-        for i in range(Temp_iter):  # Set
+    def sym_ann_algorithm(self):
+        profit0 = Solution.calculate_max_profit(self.sol_init)
+        sol_0 = self.sol_init
+        Temp_iter = 1000  # Set number of temperature iterations
+        for i in range(Temp_iter):
             print(i, 'profit = ', profit0)
 
             T = self.get_temp(i)
             self.T_list.append(T)
+            for j in range(100):  # Set
 
-            for j in range(50):  # Set
-                acc = 1
                 # Delete one event
-                r1 = np.random.randint(0, len(self.soll_init))
-                depo = soll0
-                del_event = soll0[r1]
+                r1 = np.random.randint(0, len(self.sol_init))
+                depo = sol_0
+                del_event = sol_0[r1]
                 # Replace event
                 replacement_time = del_event.time_start
-                t1 = np.random.randint(1, soll0[2] - soll0[1] + 1)
+
+                # Check possible destination and replace it in solution
+                possible_events = self.check_accessibility(replacement_time, del_event)
+                r2 = np.random.randint(0, len(possible_events))
+                t1 = np.random.randint(1, possible_events[r2][2] - possible_events[r2][1] + 1)
                 if t1 > del_event.time_stay:
                     t1 = del_event.time_stay
-
-                possible_events = self.check_accessibility(replacement_time)
-                r2 = np.random.randint(0, len(possible_events))
-                soll0[r1] = Event(possible_events[r2][0], possible_events[r2][1], t1)
+                sol_0[r1] = Event(possible_events[r2][0], possible_events[r2][1], t1)
 
                 # Get the new profit
-                profit1 = Sollution.calculate_max_profit(soll0)
+                profit1 = Solution.calculate_max_profit(sol_0)
 
                 if profit1 > profit0:
-                    # Accept new sollution
+                    # Accept new solution
                     profit0 = profit1
                 else:
-                    # Accept new (worse) sollution with a given probability
+                    # Accept new (worse) solution with a given probability
                     acc = np.random.uniform()
                     if acc < np.exp(-(profit0 - profit1) / T):
-                        # Accept the sollution
+                        # Accept the solution
                         profit0 = profit1
                     else:
-                        # Do not accept the sollution
-                        soll0 = depo
+                        # Do not accept the solution
+                        sol_0 = depo
 
             self.acc_list.append(acc)
             self.profit_list.append(profit0)
@@ -131,13 +129,13 @@ class Sollution:
         ax3 = fig.add_subplot(223)
         ax4 = fig.add_subplot(224)
         # Profit plot
-        ax2.axis([0, Temp_iter, 0, 10])
+        ax2.axis([0, Temp_iter, 0, 20000])
         ax2.scatter(np.linspace(0, Temp_iter, num=Temp_iter, endpoint=False), self.profit_list, s=1.0, color='darkgreen')
         # Acceptance plot
         ax3.axis([0, Temp_iter, 0, 1])
         ax3.scatter(np.linspace(0, Temp_iter, num=Temp_iter, endpoint=False), self.acc_list, s=1.0, color='darkgreen')
         # Temperature plot
-        ax4.axis([0, Temp_iter, 0, T_init])
+        ax4.axis([0, Temp_iter, 0, self.T_init])
         ax4.scatter(np.linspace(0, Temp_iter, num=Temp_iter, endpoint=False), self.T_list, s=1.0, color='darkgreen')
         '''
         ax1.clear()
@@ -148,8 +146,15 @@ class Sollution:
         plt.pause(0.0001)
         '''
         plt.show()
-        return soll0
+        return sol_0
 
+
+if __name__ == '__main__':
+    # tests
+    init_route = [Event("Krakow1", 1, 1), Event("Poznan1", 3, 4), Event("Szczecin1", 8, 2), Event("Wroclaw1", 11, 4), Event("Lodz2", 16, 5), Event("Wroclaw2", 21, 5), Event("Katowice2", 27, 4)]
+    init_solution = Solution(init_route, 30, SolMethod.GEO, EVENTSt)
+    init_solution.sym_ann_algorithm()
+    print(init_solution)
 
 
 
