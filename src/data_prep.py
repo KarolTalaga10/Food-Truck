@@ -2,10 +2,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
+import random
 
 # key = name of event, item = list containing starting day, ending day,
 # parking per hour cost, accommodation per night cost and base daily profit
-EVENTS = {"Warszawa": [3, 12, 10.00, 110, 1918.04], "Krakow1": [1, 6, 9.00, 100, 1198.91],
+EVENTS = {"Warszawa1": [3, 12, 10.00, 110, 1918.04], "Krakow1": [1, 6, 9.00, 100, 1198.91],
           "Krakow2": [14, 21, 9.00, 100, 1198.91], "Lodz1": [8, 13, 8.40, 90, 1113.55],
           "Lodz2": [16, 21, 8.40, 90, 1113.55], "Wroclaw1": [11, 16, 8.00, 100, 967.42],
           "Wroclaw2": [18, 26, 8.00, 100, 967.42], "Poznan1": [3, 10, 8.00, 80, 816.06],
@@ -17,7 +18,7 @@ EVENTS = {"Warszawa": [3, 12, 10.00, 110, 1918.04], "Krakow1": [1, 6, 9.00, 100,
           "Katowice2": [26, 31, 6.00, 60, 596.62]}
 
 # tuple version
-EVENTSt = [("Warszawa", 3, 12, 10.00, 110, 1918.04), ("Krakow1", 1, 6, 9.00, 100, 1198.91),
+EVENTSt = [("Warszawa1", 3, 12, 10.00, 110, 1918.04), ("Krakow1", 1, 6, 9.00, 100, 1198.91),
            ("Krakow2", 14, 21, 9.00, 100, 1198.91), ("Lodz1", 8, 13, 8.40, 90, 1113.55),
            ("Lodz2", 16, 21, 8.40, 90, 1113.55), ("Wroclaw1", 11, 16, 8.00, 100, 967.42),
            ("Wroclaw2", 18, 26, 8.00, 100, 967.42), ("Poznan1", 3, 10, 8.00, 80, 816.06),
@@ -27,11 +28,15 @@ EVENTSt = [("Warszawa", 3, 12, 10.00, 110, 1918.04), ("Krakow1", 1, 6, 9.00, 100
            ("Bydgoszcz2", 13, 18, 6.40, 70, 652.41), ("Lublin1", 1, 6, 6.20, 70, 629.26),
            ("Lublin2", 18, 24, 6.20, 70, 629.26), ("Katowice1", 4, 9, 6.00, 60, 596.62),
            ("Katowice2", 26, 31, 6.00, 60, 596.62)]
+
+NAMES = ["Warszawa1", "Krakow1", "Krakow2", "Lodz1", "Lodz2", "Wroclaw1", "Wroclaw2", "Poznan1", "Poznan2", "Gdansk1",
+         "Gdansk2", "Szczecin1", "Szczecin2", "Bydgoszcz1", "Bydgoszcz2", "Lublin1", "Lublin2", "Katowice1",
+         "Katowice2"]
+
 fuel_cost = 4.5  # per l
 fuel_usage = 13  # per 100km
 path1 = Path("../data/dist_mat.csv")
 dist_matrix = pd.read_csv(path1, index_col=0)
 FUEL_COST = fuel_cost * fuel_usage * dist_matrix/100
-#print(EVENTS['Warszawa'][1])
 
-
+# print(FUEL_COST['Katowice']['Warszawa'])
