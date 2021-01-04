@@ -56,7 +56,7 @@ class Solution:
 
     def get_temp(self, k):
         T = 0
-        alpha = 0.99
+        alpha = 0.999
         if self.sol_method is SolMethod.GEO:
             T = self.T_init * (alpha**k)
         if self.sol_method is SolMethod.BOLZ:
@@ -83,7 +83,7 @@ class Solution:
         i = random.randint(0, len(solution)-1)
         solution[i].name = draw
         return solution'''
-        choice = np.random.randint(0, 2)
+        choice = np.random.randint(0, 3)
         if choice is 0:   # Merge two random events that happen in succession and randomly find new name
             if len(solution) > 1:  # Check possibility of merging
                 draw = random.choice(NAMES)
