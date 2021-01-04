@@ -143,6 +143,11 @@ class Solution:
             self.acc_list.append(acc)
             self.profit_list.append(current_profit)
 
+        print('Best solution is: ')
+        for event in best_solution:
+            print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
+        print('Profit: ', best_profit)
+
         # Plot the result
         fig = plt.figure(figsize=(15, 5))
         # ax1 = fig.add_subplot(221)
@@ -176,10 +181,6 @@ class Solution:
             ax1.plot(c.x, c.y, 'ro')
         plt.pause(0.0001)
         '''
-        print('Best solution is: ')
-        for event in best_solution:
-            print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
-        print('Profit: ', best_profit)
 
 
 def generate_init_route(num_events: int) -> list:
@@ -208,5 +209,5 @@ if __name__ == '__main__':
     init_solution.sym_ann_algorithm()
     '''
     init_route = generate_init_route(6)
-    init_solution = Solution(init_route, 200, SolMethod.GEO, EVENTSt)
+    init_solution = Solution(init_route, 3000, SolMethod.GEO, EVENTSt)
     init_solution.sym_ann_algorithm()
