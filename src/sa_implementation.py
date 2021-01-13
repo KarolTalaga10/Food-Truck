@@ -30,13 +30,24 @@ class Event:
         y = lambda x: (-1 / (1 + 0.5 * np.exp(-0.5 * x + 3))) + 1
         for i in range(self.time_stay):
             if self.time_start + i > EVENTS[self.name][1]:
-                break
-            day_number = d - EVENTS[self.name][0] + 1
-            daily_profit = y(day_number) * EVENTS[self.name][4]
-            d += 1
-            profit += daily_profit
+                day_number = d - EVENTS[self.name][0] + 1
+                daily_profit = y(day_number) * EVENTS[self.name][4]
+                d += 1
+                profit += daily_profit
         return round(profit, 2)
 
+    def calculate_profit2(self) -> float:
+        profit = 0
+        d = self.time_start
+        y = lambda x: (-1 / (1 + 0.5 * np.exp(-0.5 * x + 3))) + 1
+        for i in range(self.time_stay):
+            if self.time_start in range(EVENTS[self.name][0], EVENTS[self.name][1] + 1):
+                if self.time_start + i > EVENTS[self.name][1]:
+                    day_number = d - EVENTS[self.name][0] + 1
+                    daily_profit = y(day_number) * EVENTS[self.name][4]
+                    d += 1
+                    profit += daily_profit
+        return round(profit, 2)
 
 class SolMethod(Enum):
     GEO = 1
@@ -45,20 +56,20 @@ class SolMethod(Enum):
 
 
 class Solution:
-    def __init__(self, sol_init, T_init, sol_method, event_depo):
+    def __init__(self, sol_init, T_init, alpha, sol_method, event_depo):
         self.sol_init = sol_init
         self.T_init = T_init
         self.sol_method = sol_method
         self.event_depo = event_depo
+        self.alpha = alpha
         self.T_list = []
         self.acc_list = []
         self.profit_list = []
 
     def get_temp(self, k):
         T = 0
-        alpha = 0.999
         if self.sol_method is SolMethod.GEO:
-            T = self.T_init * (alpha**k)
+            T = self.T_init * (self.alpha**k)
         if self.sol_method is SolMethod.BOLZ:
             T = self.T_init * (1/(1+np.log10(k)))
         if self.sol_method is SolMethod.CAUCHY:
@@ -74,7 +85,7 @@ class Solution:
                 # print("miasto 1",solution[i].name[:-1])
                 # print("miasto 2", solution[i+1].name[:-1])
                 fuel_cost = FUEL_COST[solution[i].name[:-1]][solution[i+1].name[:-1]]
-            max_profit += solution[i].calculate_profit() - solution[i].calculate_cost() - fuel_cost
+            max_profit += solution[i].calculate_profit2() - solution[i].calculate_cost() - fuel_cost
         return round(max_profit, 2)
 
     @staticmethod
@@ -130,19 +141,20 @@ class Solution:
         current_profit = Solution.calculate_max_profit(current_solution)
         best_profit = current_profit
         best_solution = current_solution
-        temporal_sol = current_solution
-        acc = 0
+        worst_profit = current_profit
         i = 1
-        while T > 0.1:
+        while T > 50:
             print(i, 'profit = ', current_profit)
             i += 1
+            temporal_sol = current_solution
             for j in range(100):
-                temporal_sol = current_solution
                 neighbour = Solution.get_neighbour(temporal_sol)
                 neighbour_profit = Solution.calculate_max_profit(neighbour)
                 if neighbour_profit > best_profit:
                     best_profit = neighbour_profit
                     best_solution = neighbour
+                if neighbour_profit < worst_profit:
+                    worst_profit = neighbour_profit
                 if neighbour_profit > current_profit:
                     # Accept new solution (better than previous best)
                     current_solution = neighbour
@@ -154,8 +166,6 @@ class Solution:
                         # Accept worse solution with probability acc
                         current_solution = neighbour
                         current_profit = neighbour_profit
-                    else:
-                        temporal_sol = current_solution
 
                         # Do not accept the solution
 
@@ -167,6 +177,7 @@ class Solution:
             print('Length: ', len(current_solution))
         for event in best_solution:
             print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
+        print('Best profit: ', best_profit)
 
         # Scatter Figure
         fig1 = plt.figure(figsize=(15, 5))
@@ -176,7 +187,7 @@ class Solution:
         ax4 = fig1.add_subplot(133)
 
         # Profit plot
-        ax2.axis([0, len(self.T_list), -5000, 25000])
+        ax2.axis([0, len(self.T_list), worst_profit - 2000, best_profit + 2000])
         ax2.scatter(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, s=1.0,
                     color='darkgreen')
         ax2.set_title('Profit graph')
@@ -202,7 +213,7 @@ class Solution:
         ax4_2 = fig2.add_subplot(133)
 
         # Profit plot
-        ax2_2.axis([0, len(self.T_list), -5000, 25000])
+        ax2_2.axis([0, len(self.T_list), worst_profit - 2000, best_profit + 2000])
         ax2_2.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list, linewidth=1.0,
                     color='darkgreen')
         ax2_2.set_title('Profit graph')
@@ -228,7 +239,7 @@ class Solution:
         ax4_3 = fig3.add_subplot(133)
 
         # Profit plot
-        ax2_3.axis([0, len(self.T_list), -5000, 25000])
+        ax2_3.axis([0, len(self.T_list), worst_profit - 2000, best_profit + 2000])
         ax2_3.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list,
                    linewidth=1.0,
                    color='darkgreen')
@@ -291,6 +302,6 @@ if __name__ == '__main__':
     init_solution.sym_ann_algorithm()
     '''
     init_route = generate_init_route(6)
-    final_solution = Solution(init_route, 3000, SolMethod.GEO, EVENTSt)
+    final_solution = Solution(init_route, 3000, 0.999, SolMethod.GEO, EVENTSt)
     final_solution.sym_ann_algorithm()
     print(len(final_solution))
