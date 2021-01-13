@@ -27,7 +27,7 @@ class Event:
     def calculate_profit(self) -> float:
         profit = 0
         d = self.time_start
-        y = lambda x: -1 / (1 + 0.5 * np.exp(-0.5 * x + 3)) + 1
+        y = lambda x: (-1 / (1 + 0.5 * np.exp(-0.5 * x + 3))) + 1
         for i in range(self.time_stay):
             if self.time_start + i > EVENTS[self.name][1]:
                 break
@@ -92,6 +92,7 @@ class Solution:
                 pop_event = solution.pop(index+1)
                 past_t_stay = solution[index].time_stay
                 solution[index].time_stay = past_t_stay + pop_event.time_stay + 1
+
             else:   # Else only change name of the found event
                 draw = random.choice(NAMES)
                 index = random.randint(0, len(solution) - 1)
@@ -119,6 +120,7 @@ class Solution:
             draw = random.choice(NAMES)
             index = random.randint(0, len(solution) - 1)
             solution[index].name = draw
+
         return solution
 
     def sym_ann_algorithm(self):
@@ -128,34 +130,15 @@ class Solution:
         current_profit = Solution.calculate_max_profit(current_solution)
         best_profit = current_profit
         best_solution = current_solution
+        temporal_sol = current_solution
         acc = 0
         i = 1
         while T > 0.1:
             print(i, 'profit = ', current_profit)
             i += 1
             for j in range(100):
-                '''
-                # Delete one event
-                r1 = np.random.randint(0, len(self.sol_init))
-                depo = sol_0
-                del_event = sol_0[r1]
-                # Replace event
-                replacement_time = del_event.time_start
-
-                neighbour = get_neighbour()
-                # Check possible destination and replace it in solution
-                possible_events = self.check_accessibility(replacement_time, del_event)
-                r2 = np.random.randint(0, len(possible_events))
-                t1 = np.random.randint(1, possible_events[r2][2] - possible_events[r2][1] + 1)
-                
-                
-                if t1 > del_event.time_stay:
-                    t1 = del_event.time_stay
-                sol_0[r1] = Event(possible_events[r2][0], replacement_time, t1)
-                '''
-                # Get the new profit
-                # profit1 = Solution.calculate_max_profit(sol_0)
-                neighbour = Solution.get_neighbour(current_solution)
+                temporal_sol = current_solution
+                neighbour = Solution.get_neighbour(temporal_sol)
                 neighbour_profit = Solution.calculate_max_profit(neighbour)
                 if neighbour_profit > best_profit:
                     best_profit = neighbour_profit
@@ -171,6 +154,8 @@ class Solution:
                         # Accept worse solution with probability acc
                         current_solution = neighbour
                         current_profit = neighbour_profit
+                    else:
+                        temporal_sol = current_solution
 
                         # Do not accept the solution
 
@@ -179,10 +164,9 @@ class Solution:
             print('Acceptance: ', np.exp((neighbour_profit-current_profit)/T))
             self.acc_list.append(np.exp((neighbour_profit-current_profit)/T))
             self.profit_list.append(current_profit)
-
+            print('Length: ', len(current_solution))
         for event in best_solution:
             print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
-        print('Profit: ', best_profit)
 
         # Scatter Figure
         fig1 = plt.figure(figsize=(15, 5))
@@ -307,6 +291,6 @@ if __name__ == '__main__':
     init_solution.sym_ann_algorithm()
     '''
     init_route = generate_init_route(6)
-    final_solution = Solution(init_route, 5000, SolMethod.GEO, EVENTSt)
+    final_solution = Solution(init_route, 3000, SolMethod.GEO, EVENTSt)
     final_solution.sym_ann_algorithm()
     print(len(final_solution))
