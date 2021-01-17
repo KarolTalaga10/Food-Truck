@@ -39,5 +39,4 @@ fuel_usage = 13  # per 100km
 path1 = Path("../data/dist_mat.csv")
 dist_matrix = pd.read_csv(path1, index_col=0)
 FUEL_COST = fuel_cost * fuel_usage * dist_matrix/100
-
-# print(FUEL_COST['Katowice']['Warszawa'])
+#print(FUEL_COST['Wroclaw']['Katowice'])

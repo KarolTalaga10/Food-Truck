@@ -1,8 +1,10 @@
 import numpy as np
+import sys
 from src.data_prep import EVENTS, EVENTSt, FUEL_COST, NAMES
 from enum import Enum
 import matplotlib.pyplot as plt
 import random
+from copy import deepcopy
 
 
 class Event:
@@ -23,7 +25,6 @@ class Event:
         accommodation = EVENTS[self.name][3] * self.time_stay
         cost = parking + accommodation
         return round(cost, 2)
-
 
     def calculate_profit(self) -> float:
         profit = 0
@@ -49,15 +50,18 @@ class SolMethod(Enum):
 
 
 class Solution:
-    def __init__(self, sol_init, T_init, alpha, sol_method, event_depo):
+    def __init__(self, sol_init, T_init, alpha, T_min, sol_method, event_depo, best_solution, best_profit):
         self.sol_init = sol_init
         self.T_init = T_init
         self.sol_method = sol_method
         self.event_depo = event_depo
         self.alpha = alpha
+        self.T_min = T_min
         self.T_list = []
         self.acc_list = []
         self.profit_list = []
+        self.best_solution = best_solution
+        self.best_profit = best_profit
 
     def get_temp(self, k):
         T = 0
@@ -75,19 +79,79 @@ class Solution:
         for i in range(len(solution)):
             fuel_cost = 0
             if i < len(solution) - 1:
-                # print("miasto 1",solution[i].name[:-1])
-                # print("miasto 2", solution[i+1].name[:-1])
                 fuel_cost = FUEL_COST[solution[i].name[:-1]][solution[i + 1].name[:-1]]
             max_profit += solution[i].calculate_profit() - solution[i].calculate_cost() - fuel_cost
         return round(max_profit, 2)
 
+    '''
     @staticmethod
     def get_neighbour(solution):
-        '''draw = random.choice(NAMES)
+        
+        draw = random.choice(NAMES)
         i = random.randint(0, len(solution)-1)
         solution[i].name = draw
-        return solution'''
-        choice = np.random.randint(0, 3)
+        return solution
+    
+        choice = np.random.randint(0, 5)
+        if choice == 0:  # Delete one event
+            if len(solution) > 1:  # Check possibility of deleting
+                index = random.randint(0, len(solution) - 2)
+                pop_event = solution.pop(index + 1)
+                past_t_stay = solution[index].time_stay
+                solution[index].time_stay = past_t_stay + pop_event.time_stay + 1
+
+            else:  # Else only change name of the found event
+                draw = random.choice(NAMES)
+                index = random.randint(0, len(solution) - 1)
+                solution[index].name = draw
+
+        if choice == 1:  # Add new event
+            index = random.randint(1, len(solution) - 1)
+            if solution[index].time_stay >= 3:  # Check possibility of separation
+                draw = random.choice(NAMES)
+                past_t_stay = solution[index].time_stay
+                new_t_stay = random.randint(1, past_t_stay - 2)
+                solution[index].time_stay = new_t_stay
+                solution.insert(index + 1, Event(draw, solution[index].time_start + new_t_stay + 1,
+                                                 past_t_stay - new_t_stay - 1))
+
+            else:  # Else only change name of the found event
+                draw = random.choice(NAMES)
+                index = random.randint(0, len(solution) - 1)
+                solution[index].name = draw
+
+        if choice == 2:  # Change name of random event
+            draw = random.choice(NAMES)
+            index = random.randint(0, len(solution) - 1)
+            solution[index].name = draw
+
+        if choice == 3:  # Swap two consecutive events
+            index = random.randint(0, len(solution) - 2)
+            solution[index], solution[index+1] = solution[index+1], solution[index]
+
+        if choice == 4:  # Change time of selling in two random events (take from one, add to next)
+            index = random.sample(range(1, len(solution) - 1), 2)
+            past_t_stay = solution[index[0]].time_stay
+            if past_t_stay < 3:
+                past_t_stay = solution[index[1]].time_stay
+                new_t_stay = random.randint(1, past_t_stay - 2)
+                solution[index[1]].time_stay = new_t_stay
+                solution[index[0]].time_stay += past_t_stay - new_t_stay
+            new_t_stay = random.randint(0, past_t_stay - 1)
+            solution[index[0]].time_stay = new_t_stay
+            solution[index[1]].time_stay += past_t_stay - new_t_stay
+        return solution
+    '''
+
+    @staticmethod
+    def print_solution(solution):
+        for event in solution:
+            print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
+
+    @staticmethod
+    def get_neighbour(solution):
+        choice = np.random.randint(0, 5)
+
         if choice == 0:  # Merge two random events that happen in succession and randomly find new name
             if len(solution) > 1:  # Check possibility of merging
                 draw = random.choice(NAMES)
@@ -102,7 +166,7 @@ class Solution:
                 index = random.randint(0, len(solution) - 1)
                 solution[index].name = draw
 
-        elif choice == 1:  # Separate two new events from random one
+        if choice == 1:  # Separate two new events from random one
             index = random.randint(0, len(solution) - 1)
             if solution[index].time_stay >= 3:  # Check possibility of separation
                 draw_1 = random.choice(NAMES)
@@ -120,7 +184,28 @@ class Solution:
                 index = random.randint(0, len(solution) - 1)
                 solution[index].name = draw
 
-        else:  # Change name of random event
+        if choice == 2:  # Delete one event
+            if len(solution) > 1:  # Check possibility of deleting
+                index = random.randint(0, len(solution) - 2)
+                pop_event = solution.pop(index + 1)
+                past_t_stay = solution[index].time_stay
+                solution[index].time_stay = past_t_stay + pop_event.time_stay + 1
+
+            else:  # Else only change name of the found event
+                draw = random.choice(NAMES)
+                index = random.randint(0, len(solution) - 1)
+                solution[index].name = draw
+
+        if choice == 3:  # Swap two consecutive events
+            if len(solution) > 1:
+                index = random.randint(0, len(solution) - 2)
+                solution[index].name, solution[index + 1].name = solution[index + 1].name, solution[index].name
+            else:  # Else only change name of the found event
+                draw = random.choice(NAMES)
+                index = random.randint(0, len(solution) - 1)
+                solution[index].name = draw
+
+        if choice == 4:  # Change name of random event
             draw = random.choice(NAMES)
             index = random.randint(0, len(solution) - 1)
             solution[index].name = draw
@@ -129,48 +214,52 @@ class Solution:
 
     def sym_ann_algorithm(self):
         T = self.T_init
-        current_solution = self.sol_init
+        current_solution = deepcopy(self.sol_init)
         # print('Aktualne rozwiazanie: ', current_solution)
-        current_profit = Solution.calculate_max_profit(current_solution)
-        best_profit = current_profit
-        best_solution = current_solution
+        current_profit = self.calculate_max_profit(current_solution)
+        #best_profit = current_profit
+        #best_solution = current_solution
         worst_profit = current_profit
         i = 1
-        while T > 50:
-            print(i, 'profit = ', current_profit)
+        while T > self.T_min:
+            print(i, ' iteration:')
             i += 1
-            temporal_sol = current_solution
-            for j in range(100):
-                neighbour = Solution.get_neighbour(temporal_sol)
-                neighbour_profit = Solution.calculate_max_profit(neighbour)
-                if neighbour_profit > best_profit:
-                    best_profit = neighbour_profit
-                    best_solution = neighbour
-                if neighbour_profit < worst_profit:
-                    worst_profit = neighbour_profit
+            for j in range(20):
+                neighbour = deepcopy(self.get_neighbour(current_solution))
+                self.print_solution(neighbour)
+                neighbour_profit = self.calculate_max_profit(neighbour)
+                print('Neighbour profit: {0} \n'.format(neighbour_profit))
+
                 if neighbour_profit > current_profit:
                     # Accept new solution (better than previous best)
-                    current_solution = neighbour
+                    current_solution = deepcopy(neighbour)
                     current_profit = neighbour_profit
+                    if current_profit > self.best_profit:
+                        self.best_profit = current_profit
+                        self.best_solution = deepcopy(current_solution)
+                    if neighbour_profit < worst_profit:
+                        worst_profit = neighbour_profit
 
                 else:
                     acc = np.random.uniform(0, 1)
                     if acc < np.exp((neighbour_profit - current_profit) / T):
                         # Accept worse solution with probability acc
-                        current_solution = neighbour
+                        current_solution = deepcopy(neighbour)
                         current_profit = neighbour_profit
-
-                        # Do not accept the solution
 
             T = self.get_temp(i)
             self.T_list.append(T)
-            print('Acceptance: ', np.exp((neighbour_profit - current_profit) / T))
+            # print('Acceptance: ', np.exp((neighbour_profit - current_profit) / T))
             self.acc_list.append(np.exp((neighbour_profit - current_profit) / T))
             self.profit_list.append(current_profit)
-            print('Length: ', len(current_solution))
-        for event in best_solution:
-            print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
-        print('Best profit: ', best_profit)
+            # print('Length: ', len(current_solution))
+            print('Best solution after {0} iteration is: '.format(i))
+            Solution.print_solution(self.best_solution)
+            print(100 * '*')
+
+        print('Best solution is: ')
+        Solution.print_solution(self.best_solution)
+        print('Best profit: ', self.best_profit)
 
         # # Scatter Figure
         # fig1 = plt.figure(figsize=(15, 5))
@@ -230,9 +319,9 @@ class Solution:
         ax4_3 = fig3.add_subplot(133)
 
         # Profit plot
-        ax2_3.axis([0, len(self.T_list), worst_profit - 2000, best_profit + 2000])
+        ax2_3.axis([0, len(self.T_list), worst_profit - 2000, self.best_profit + 2000])
         ax2_3.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list,
-                   linewidth=1.0,
+                   linewidth=0.5,
                    color='darkgreen')
         ax2_3.set_title('Profit graph')
 
@@ -255,15 +344,22 @@ class Solution:
         for c in coords:
             ax1.plot(c.x, c.y, 'ro')
         plt.pause(0.0001)
+        
+        plt.figure(figsize=(15, 5))
+        # Profit plot
+        plt.axis([0, len(self.T_list), worst_profit - 2000, best_profit + 2000])
+        plt.plot(np.linspace(0, len(self.T_list), num=len(self.T_list), endpoint=False), self.profit_list,
+                   linewidth=1.0,
+                   color='darkgreen')
+        #plt.set_title('Profit graph')
+        plt.show()
         '''
-        print('Best solution is: ')
 
 
-def generate_init_route(num_events: int) -> list:
+def generate_init_route(num_events: int, num_days: int) -> list:
     init = []
-    calendar = 31
-    dividers = sorted(random.sample(range(1, calendar - num_events), num_events - 1))
-    random_numbers = [a - b for a, b in zip(dividers + [calendar - num_events], [0] + dividers)]
+    dividers = sorted(random.sample(range(1, num_days - num_events), num_events - 1))
+    random_numbers = [a - b for a, b in zip(dividers + [num_days - num_events], [0] + dividers)]
     time_start = 1
     time_sum = 0
     name = random.sample(NAMES, num_events)
@@ -275,8 +371,7 @@ def generate_init_route(num_events: int) -> list:
         init.append(event)
 
     print('Initial solution is: ')
-    for event in init:
-        print('{0}, {1}, {2}'.format(event.name, event.time_start, event.time_stay))
+    Solution.print_solution(init)
 
     print(len(init))
 
@@ -291,7 +386,9 @@ if __name__ == '__main__':
     init_solution = Solution(init_route, 2200, SolMethod.GEO, EVENTSt)
     init_solution.sym_ann_algorithm()
     '''
-    init_route = generate_init_route(6)
-    final_solution = Solution(init_route, 3000, 0.999, SolMethod.GEO, EVENTSt)
+    sys.stdout = open("test.txt", "w")
+    init_route = generate_init_route(6, 31)
+    final_solution = Solution(init_route, 5000, 0.999, 10, SolMethod.GEO, EVENTSt, init_route, 0)
     final_solution.sym_ann_algorithm()
     print(final_solution)
+    sys.stdout.close()
