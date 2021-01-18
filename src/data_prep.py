@@ -1,8 +1,5 @@
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from pathlib import Path
-import random
 
 # key = name of event, item = list containing starting day, ending day,
 # parking per hour cost, accommodation per night cost and base daily profit
@@ -39,4 +36,3 @@ fuel_usage = 13  # per 100km
 path1 = Path("../data/dist_mat.csv")
 dist_matrix = pd.read_csv(path1, index_col=0)
 FUEL_COST = fuel_cost * fuel_usage * dist_matrix/100
-#print(FUEL_COST['Wroclaw']['Katowice'])
