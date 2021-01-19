@@ -1,5 +1,5 @@
 import numpy as np
-from src.data_prep import EVENTS, FUEL_COST, NAMES
+from data_prep import EVENTS, FUEL_COST, NAMES
 from enum import Enum
 import matplotlib.pyplot as plt
 import random
