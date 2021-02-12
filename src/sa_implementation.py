@@ -318,26 +318,12 @@ def generate_init_route(num_events: int, num_days: int) -> list:
         time_sum += time_stay
         time_start = time_sum + 2 + i
         init.append(event)
-
-    print('Initial solution is: ')
-    Solution.print_solution(init)
-
-    print(len(init))
-
     return init
 
 
 if __name__ == '__main__':
-    '''
-    # init_route = [Event("Krakow1", 1, 1), Event("Poznan1", 3, 4), Event("Szczecin1", 8, 2), Event("Wroclaw1", 11, 4),
-     #             Event("Lodz2", 16, 5), Event("Wroclaw2", 21, 5)]
-    init_route = generate_init_route(5)
-    init_solution = Solution(init_route, 2200, SolMethod.GEO, EVENTSt)
-    init_solution.sym_ann_algorithm()
-    
-    # sys.stdout = open("test.txt", "w")
-    #init_route = generate_init_route(6, 31)
-    #final_solution = Solution(init_route, 5000, 0.999, 10, SolMethod.GEO, 20, init_route, 0)
-    #final_solution.sym_ann_algorithm()
-    # sys.stdout.close()
-    '''
+
+    # Console version
+    init_route = generate_init_route(6, 31)
+    final_solution = Solution(init_route, 3000, 0.999, 0.1, SolMethod.GEO, 20, init_route, 0)
+    final_solution.sym_ann_algorithm()
